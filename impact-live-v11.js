@@ -1,9 +1,10 @@
-/*! Impact Windows Win live redesign v11.2.2 — cropped door photos */
+/*! Impact Windows Win live redesign v11.3 — homepage only */
 (function(){
   if (window.__impactRedesignV11) return;
   window.__impactRedesignV11 = true;
   window.__impactLayoutFixV11_1 = true;
   window.__impactDoorsFixV11_2 = true;
+  window.__impactHomeOnlyV11_3 = true;
   window.__impactImgFixV2 = true;
   window.__impactImgFixV1 = true;
 
@@ -28,6 +29,49 @@
     if(!el) return;
     ['position','left','top','right','bottom','margin-top','transform','height','max-height','overflow','box-sizing','grid-area','grid-row','grid-column']
       .forEach(function(k,i){ sp(el,k,['relative','auto','auto','auto','auto','0','none','auto','none','visible','border-box','auto','auto','auto'][i]); });
+  }
+
+
+  function isHome(){
+    try{
+      var p=(location.pathname||'/').replace(/\/+$/,'') || '/';
+      return p==='/' || p==='/home' || /^\/?index(\.html?)?$/i.test(p);
+    }catch(e){ return false; }
+  }
+  function teardownNonHome(){
+    // Remove homepage-only chrome so other pages stay native Wix
+    ['impact-redesign-v11','impact-v11-patch-css','impact-home-only-css'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.remove();
+    });
+    ['impact-topbar','impact-home-stack','impact-hero','impact-trust','impact-benefits','impact-header-cta','impact-logo-mark','impact-call-chip','impact-site-footer','impact-doors-2x2'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.remove();
+    });
+    qsa('[id^="impact-door-card-"]').forEach(function(el){ el.remove(); });
+    // Unhide anything we may have hidden
+    qsa('.impact-hide,[data-impact-benefits-src],[data-impact-door-title]').forEach(function(el){
+      el.classList.remove('impact-hide');
+      el.removeAttribute('data-impact-benefits-src');
+      el.removeAttribute('data-impact-door-title');
+      if(el.style){
+        el.style.removeProperty('display');
+        el.style.removeProperty('height');
+        el.style.removeProperty('opacity');
+        el.style.removeProperty('position');
+        el.style.removeProperty('left');
+      }
+    });
+    var foot=document.getElementById('SITE_FOOTER');
+    if(foot){
+      Array.prototype.forEach.call(foot.children, function(child){
+        if(child.style){
+          child.style.removeProperty('display');
+          child.style.removeProperty('height');
+        }
+        child.classList.remove('impact-hide');
+      });
+    }
+    document.body && document.body.classList.remove('impact-v11-on');
+    document.documentElement && document.documentElement.classList.remove('impact-ready');
   }
 
   function injectCss(){
@@ -501,6 +545,10 @@
 
   function boot(){
     try{
+      if(!isHome()){
+        teardownNonHome();
+        return;
+      }
       injectCss();
       bootChrome();
       repairImages();
@@ -510,6 +558,7 @@
       doors2x2();
       fixFooter();
       killRed();
+      document.body.classList.add('impact-v11-on');
       document.documentElement.classList.add('impact-ready');
     }catch(e){ console.error('[impact-v11]', e); }
   }
@@ -518,6 +567,7 @@
   else boot();
   [100,400,1000,2500,5000].forEach(function(t){ setTimeout(boot,t); });
   setInterval(function(){
+    if(!isHome()){ teardownNonHome(); return; }
     if(!document.getElementById('impact-hero')) boot();
     else { repairImages(); killRed(); doors2x2(); demoteExtraCtas(); hideNativeBenefits(); var st=document.getElementById('impact-home-stack'); if(st) placeStack(st); }
   }, 4000);
@@ -526,7 +576,14 @@
 ;(function(){
   function qsa(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel));}
   function sp(el,k,v){if(el&&el.style)el.style.setProperty(k,v,'important');}
+  function isHomePage(){
+    try{
+      var p=(location.pathname||'/').replace(/\/+$/,'') || '/';
+      return p==='/' || p==='/home';
+    }catch(e){ return false; }
+  }
   function enhance(){
+    if(!isHomePage()) return;
     try{
       qsa('#SITE_HEADER,#SITE_HEADER_WRAPPER').forEach(function(el){
         el.style.setProperty('--wixui-menu-item-label-underline-color','#5d6b7c','important');
